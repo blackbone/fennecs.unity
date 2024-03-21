@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>12</LangVersion>
+        <RootNamespace>fennecs</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <NoWarn>1701;1702;8767</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DebugType>portable</DebugType>
+        <NoWarn>1701;1702;8767</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="fennecs\utility\Random.Dotnet.cs" />
+    </ItemGroup>
+
+</Project>

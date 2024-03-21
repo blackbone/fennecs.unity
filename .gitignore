@@ -1,0 +1,5 @@
+[Bb]in/
+[Oo]bj/
+src~/fennecs/**
+!src~/fennecs/_keepMeSafe
+.DS_Store

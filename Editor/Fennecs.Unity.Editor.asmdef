@@ -1,0 +1,10 @@
+{
+  "name": "Fennecs.Unity.Editor",
+  "rootNamespace": "Fennecs.Unity.Editor",
+  "references": [
+    "Fennecs.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

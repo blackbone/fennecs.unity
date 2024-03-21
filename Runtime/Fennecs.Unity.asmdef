@@ -1,0 +1,28 @@
+{
+    "name": "Fennecs.Unity",
+    "rootNamespace": "fennecs",
+    "references": [
+        "Unity.Collections",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.collections",
+            "expression": "",
+            "define": "UNITY_COLLECTIONS"
+        },
+        {
+            "name": "com.unity.burst",
+            "expression": "",
+            "define": "UNITY_BURST"
+        }
+    ],
+    "noEngineReferences": false
+}
