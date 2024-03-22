@@ -32,7 +32,7 @@ namespace fennecs
     /// </remarks>
     public static class Query2Extensions
     {
-        public static void Cross<C0, C1>(this Query<C0, C1> query, in Action<C0[], C1[]> action)
+        public static void Cross<C0, C1>(this Query<C0, C1> query, in Action<C0[], C1[], int> action)
         {
             query.AssertNotDisposed();
             using var worldLock = query.World.Lock;
@@ -44,7 +44,7 @@ namespace fennecs
                 if (join.Empty) continue;
 
                 var (s0, s1) = join.Select;
-                action(s0, s1);
+                action(s0, s1, table.Count);
             }
         }
         
@@ -67,14 +67,11 @@ namespace fennecs
                 if (join.Empty) continue;
 
                 var (s0, s1) = join.Select;
-                nativeArrayAccesses.Add(s0.GetNativeArrayAccess(out var memory1));
-                nativeArrayAccesses.Add(s1.GetNativeArrayAccess(out var memory2));
-
                 jobs[i] = new UnityJob<C0, C1>
                 {
                     count = table.Count, // storage.Length is the capacity, not the count.
-                    Memory1 = memory1,
-                    Memory2 = memory2,
+                    Memory0 = Unsafe.AsPointer(ref s0[0]),
+                    Memory1 = Unsafe.AsPointer(ref s1[0]),
                     Action = Unsafe.AsPointer(ref action)
                 };
             }
@@ -124,14 +121,11 @@ namespace fennecs
                 if (join.Empty) continue;
 
                 var (s0, s1) = join.Select;
-                nativeArrayAccesses.Add(s0.GetNativeArrayAccess(out var memory1));
-                nativeArrayAccesses.Add(s1.GetNativeArrayAccess(out var memory2));
-                
                 jobs[i] = new UnityJob<C0, C1, U>
                 {
                     count = table.Count,
-                    Memory1 = memory1,
-                    Memory2 = memory2,
+                    Memory0 = Unsafe.AsPointer(ref s0[0]),
+                    Memory1 = Unsafe.AsPointer(ref s1[0]),
                     Uniform = uniform,
                     Action = actionPtr
                 };
@@ -164,15 +158,15 @@ namespace fennecs
         {
             internal int count;
             [NativeDisableUnsafePtrRestriction] public unsafe void* Action;
-            public NativeArray<C0> Memory1;
-            public NativeArray<C1> Memory2;
+            [NativeDisableUnsafePtrRestriction] public unsafe void* Memory0;
+            [NativeDisableUnsafePtrRestriction] public unsafe void* Memory1;
 
             public unsafe void Execute(int index)
-            {
-                ref var c0 = ref UnsafeUtility.ArrayElementAsRef<C0>(Memory1.GetUnsafePtr(), index);
-                ref var c1 = ref UnsafeUtility.ArrayElementAsRef<C1>(Memory2.GetUnsafePtr(), index);
-                ref var action = ref Unsafe.AsRef<RefAction<C0, C1>>(Action);                
-                action.Invoke(ref c0, ref c1);
+            {            
+                Unsafe.AsRef<RefAction<C0, C1>>(Action).Invoke(
+                    ref UnsafeUtility.ArrayElementAsRef<C0>(Memory0, index),
+                    ref UnsafeUtility.ArrayElementAsRef<C1>(Memory1, index)
+                );
             }
         }
 
@@ -184,27 +178,17 @@ namespace fennecs
         {
             internal int count;
             [NativeDisableUnsafePtrRestriction] public unsafe void* Action;
-            [NativeDisableContainerSafetyRestriction] public NativeArray<C0> Memory1;
-            [NativeDisableContainerSafetyRestriction] public NativeArray<C1> Memory2;
+            [NativeDisableUnsafePtrRestriction] public unsafe void* Memory0;
+            [NativeDisableUnsafePtrRestriction] public unsafe void* Memory1;
             public U Uniform;
 
             public unsafe void Execute(int index)
             {
-                ref var c0 = ref UnsafeUtility.ArrayElementAsRef<C0>(Memory1.GetUnsafePtr(), index);
-                ref var c1 = ref UnsafeUtility.ArrayElementAsRef<C1>(Memory2.GetUnsafePtr(), index);
-                ref var action = ref Unsafe.AsRef<RefActionU<C0, C1, U>>(Action);
-                action.Invoke(ref c0, ref c1, Uniform);
-            }
-
-            public unsafe void Execute()
-            {
-                ref var action = ref Unsafe.AsRef<RefActionU<C0, C1, U>>(Action);
-                for (var i = 0; i < count; i++)
-                {
-                    ref var c0 = ref UnsafeUtility.ArrayElementAsRef<C0>(Memory1.GetUnsafePtr(), i);
-                    ref var c1 = ref UnsafeUtility.ArrayElementAsRef<C1>(Memory2.GetUnsafePtr(), i);
-                    action.Invoke(ref c0, ref c1, Uniform);
-                }
+                Unsafe.AsRef<RefActionU<C0, C1, U>>(Action).Invoke(
+                    ref UnsafeUtility.ArrayElementAsRef<C0>(Memory0, index),
+                    ref UnsafeUtility.ArrayElementAsRef<C1>(Memory1, index),
+                    Uniform
+                    );
             }
         }
     }

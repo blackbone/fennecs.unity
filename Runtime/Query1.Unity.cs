@@ -46,7 +46,7 @@ namespace fennecs
             }
         }
         
-        public static void JobFor<C0>(this Query<C0> query, RefAction<C0> action, int chunkSize = 128)
+        public static unsafe void JobFor<C0>(this Query<C0> query, RefAction<C0> action, int chunkSize = 128)
             where C0 : struct
         {
             query.AssertNotDisposed();
@@ -63,25 +63,19 @@ namespace fennecs
                 if (join.Empty) continue;
 
                 var s0 = join.Select;
-                unsafe
+                jobs[i] = new UnityJob<C0>
                 {
-                    jobs[i] = new UnityJob<C0>
-                    {
-                        count = table.Count, // storage.Length is the capacity, not the count.
-                        Memory1 = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<C0>(Unsafe.AsPointer(ref s0), table.Count, Allocator.Persistent),
-                        Action = Unsafe.AsPointer(ref action)
-                    };
-                }
+                    count = table.Count,
+                    Memory0 = Unsafe.AsPointer(ref s0[0]),
+                    Action = Unsafe.AsPointer(ref action)
+                };
             }
 
             // schedule unity jobs
-            unsafe
+            for (var i = 0; i < jobCount; i++)
             {
-                for (var i = 0; i < jobCount; i++)
-                {
-                    ref var job = ref UnsafeUtility.ArrayElementAsRef<UnityJob<C0>>(jobs.GetUnsafePtr(), i);
-                    jobHandles[i] = job.ScheduleParallelByRef(job.count, chunkSize, default);
-                }
+                ref var job = ref UnsafeUtility.ArrayElementAsRef<UnityJob<C0>>(jobs.GetUnsafePtr(), i);
+                if (job.count > 0) jobHandles[i] = job.ScheduleParallelByRef(job.count, chunkSize, default);
             }
 
             // wait all jobs completed
@@ -92,7 +86,7 @@ namespace fennecs
             jobHandles.Dispose();
         }
 
-        public static void JobFor<C0, U>(this Query<C0> query, RefActionU<C0, U> action, ref U uniform, int chunkSize = 128)
+        public static unsafe void JobFor<C0, U>(this Query<C0> query, RefActionU<C0, U> action, ref U uniform, int chunkSize = 128)
             where C0 : struct
         {
             query.AssertNotDisposed();
@@ -110,28 +104,20 @@ namespace fennecs
                 if (join.Empty) continue;
 
                 var s0 = join.Select;
-                unsafe
+                jobs[i] = new UnityJob<C0, U>
                 {
-                    nativeArrayAccesses.Add(s0.GetNativeArrayAccess(out var memory1));
-                    jobs[i] = new UnityJob<C0, U>
-                    {
-                        count = table.Count,
-                        Memory1 = memory1,
-                        Uniform = uniform,
-                        Action = Unsafe.AsPointer(ref action),
-                        FP = BurstCompiler.CompileFunctionPointer(action)
-                    };
-                }
+                    count = table.Count,
+                    Memory0 = Unsafe.AsPointer(ref s0[0]),
+                    Uniform = uniform,
+                    Action = Unsafe.AsPointer(ref action)
+                };
             }
 
             // schedule unity jobs
-            unsafe
+            for (var i = 0; i < jobCount; i++)
             {
-                for (var i = 0; i < jobCount; i++)
-                {
-                    ref var job = ref UnsafeUtility.ArrayElementAsRef<UnityJob<C0, U>>(jobs.GetUnsafePtr(), i);
-                    jobHandles[i] = job.ScheduleParallelByRef(job.count, chunkSize, default);
-                }
+                ref var job = ref UnsafeUtility.ArrayElementAsRef<UnityJob<C0, U>>(jobs.GetUnsafePtr(), i);
+                if (job.count > 0) jobHandles[i] = job.ScheduleParallelByRef(job.count, chunkSize, default);
             }
 
             // wait all jobs completed
@@ -150,13 +136,13 @@ namespace fennecs
             where C0 : struct
         {
             internal int count;
-            [NativeDisableContainerSafetyRestriction] public NativeArray<C0> Memory1;
             [NativeDisableUnsafePtrRestriction] public unsafe void* Action;
+            [NativeDisableUnsafePtrRestriction] public unsafe void* Memory0;
 
             public unsafe void Execute(int index)
             {
                 Unsafe.AsRef<RefAction<C0>>(Action).Invoke(
-                    ref UnsafeUtility.ArrayElementAsRef<C0>(Memory1.GetUnsafePtr(), index)
+                    ref UnsafeUtility.ArrayElementAsRef<C0>(Memory0, index)
                 );
             }
         }
@@ -167,16 +153,15 @@ namespace fennecs
         {
             public int count;
             [NativeDisableUnsafePtrRestriction] public unsafe void* Action;
-            [NativeDisableContainerSafetyRestriction] public NativeArray<C0> Memory1;
+            [NativeDisableUnsafePtrRestriction] public unsafe void* Memory0;
             public U Uniform;
-            public FunctionPointer<RefActionU<C0, U>> FP;
 
             public unsafe void Execute(int index)
             {
                 Unsafe.AsRef<RefActionU<C0, U>>(Action).Invoke(
-                    ref UnsafeUtility.ArrayElementAsRef<C0>(Memory1.GetUnsafePtr(), index),
+                    ref UnsafeUtility.ArrayElementAsRef<C0>(Memory0, index),
                     Uniform
-                    );
+                );
             }
         }
     }
