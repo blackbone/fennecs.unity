@@ -1,6 +1,6 @@
 {
-  "name": "com.thygrrr.fennecs",
-  "displayName": "Fennecs",
+  "name": "com.blackbone.fennecs-unity",
+  "displayName": "Fennecs Unity",
   "version": "0.2.0-beta",
   "description": "... the tiny, tiny, high-energy Entity Component System!\n\na box of fennecs, 8-color pixel art \t\nOkay, what the fox!\nAnother ECS?!\n\nWe know... oh, we know. \ud83d\ude29\n\nBut in a nutshell, fennecs is...\n\n\ud83d\udc3e zero codegen\n\ud83d\udc3e minimal boilerplate\n\ud83d\udc3e archetype-based\n\ud83d\udc3e intuitively relational\n\ud83d\udc3e lithe and fast",
   "dependencies": {

@@ -31,7 +31,7 @@ namespace fennecs
     /// </remarks>
     public static class Query5Extensions
     {
-        public static void Cross<C0, C1, C2, C3, C4>(this Query<C0, C1> query, in Action<C0[], C1[], C2[], C3[], int> action)
+        public static void Cross<C0, C1, C2, C3, C4>(this Query<C0, C1> query, in Action<C0[], C1[], C2[], C3[], C4[], int> action)
         {
             query.AssertNotDisposed();
             using var worldLock = query.World.Lock;
@@ -43,7 +43,7 @@ namespace fennecs
                 if (join.Empty) continue;
 
                 var (s0, s1, s2, s3, s4) = join.Select;
-                action(s0, s1, s2, s3, table.Count);
+                action(s0, s1, s2, s3, s4, table.Count);
             }
         }
         
