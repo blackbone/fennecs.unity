@@ -57,145 +57,151 @@ There's a couple of restriction because of Unity's nature:
 ### Code samples
 
 <details>
-    <summary>Simple increment</summary>
+<summary>Simple increment</summary>
 
-    ```csharp
-    class Sample
-    {
-        private struct Component { public int value; }
-        
-        private readonly World world = new();
-        private readonly Query<Component> components;
+```csharp
+using fennecs;
 
-        public Sample() {
-            var c = new Component { value = 0 };
-            components = world.Query<Component>().Build();
-            for (var i = 0; i < 128; i++)
-                world.Spawn().Add(c);
-        }
+class Sample
+{
+    private struct Component { public int value; }
+    
+    private readonly World world = new();
+    private readonly Query<Component> components;
 
-        public void Update()
-        {
-            components.For((ref Component c) => c.value++); // will run on main thread
-            components.Job((ref Component c) => c.value++); // will run on thread pool
-            components.JobFor((ref Component c) => c.value++); // will run with jobs
-        }
+    public Sample() {
+        var c = new Component { value = 0 };
+        components = world.Query<Component>().Build();
+        for (var i = 0; i < 128; i++)
+            world.Spawn().Add(c);
     }
-    ```
+
+    public void Update()
+    {
+        components.For((ref Component c) => c.value++); // will run on main thread
+        components.Job((ref Component c) => c.value++); // will run on thread pool
+        components.JobFor((ref Component c) => c.value++); // will run with jobs
+    }
+}
+```
 </details>
 
 <details>
-    <summary>Two components</summary>
+<summary>Two components</summary>
 
-    ```csharp
-    class Sample
+```csharp
+using fennecs;
+
+class Sample
+{
+    private struct Component1 { public int value; }
+    private struct Component2 { public int value; }
+    
+    private readonly World world = new();
+    private readonly Query<Component1, Component2> cross;
+
+    public Sample()
     {
-        private struct Component1 { public int value; }
-        private struct Component2 { public int value; }
-        
-        private readonly World world = new();
-        private readonly Query<Component1, Component2> cross;
-
-        public Sample()
-        {
-            var c1 = new Component1 { value = 0 };
-            var c2 = new Component2 { value = 1 };
-            cross = world.Query<Component1, Component2>().Build();
-            for (var i = 0; i < 128; i++)
-                world.Spawn().Add(c1).Add(c2);
-        }
-
-        public void Update()
-        {
-            cross.For((ref Component1 c1, ref Component2 c2) => c1.value += c2.value); // will run on main thread
-            cross.Job((ref Component1 c1, ref Component2 c2) => c1.value += c2.value); // will run on thread pool
-            cross.JobFor((ref Component1 c1, ref Component2 c2) => c1.value += c2.value); // will run with jobs
-        }
+        var c1 = new Component1 { value = 0 };
+        var c2 = new Component2 { value = 1 };
+        cross = world.Query<Component1, Component2>().Build();
+        for (var i = 0; i < 128; i++)
+            world.Spawn().Add(c1).Add(c2);
     }
-    ```
+
+    public void Update()
+    {
+        cross.For((ref Component1 c1, ref Component2 c2) => c1.value += c2.value); // will run on main thread
+        cross.Job((ref Component1 c1, ref Component2 c2) => c1.value += c2.value); // will run on thread pool
+        cross.JobFor((ref Component1 c1, ref Component2 c2) => c1.value += c2.value); // will run with jobs
+    }
+}
+```
 </details>
 
 <details>
-    <summary>Two components with uniform</summary>
+<summary>Two components with uniform</summary>
 
-    ```csharp
-    class Sample
+```csharp
+using fennecs;
+
+class Sample
+{
+    private struct Component1 { public int value; }
+    private struct Component2 { public int value; }
+    
+    private struct Uniform
     {
-        private struct Component1 { public int value; }
-        private struct Component2 { public int value; }
-        
-        private struct Uniform
-        {
-            public int value;
-        }
-            
-        private readonly World world = new();
-        private readonly Query<Component1, Component2> cross;
-
-        public Sample()
-        {
-            var c1 = new Component1 { value = 0 };
-            var c2 = new Component2 { value = 1 };
-            cross = world.Query<Component1, Component2>().Build();
-            for (var i = 0; i < 128; i++)
-                world.Spawn().Add(c1).Add(c2);
-        }
-
-        public void Update()
-        {
-            var uniform = new Uniform { value = 2 };
-            cross.For((ref Component1 c1, ref Component2 c2, Uniform u) => c1.value += c2.value * u.value, uniform); // will run on main thread
-            cross.Job((ref Component1 c1, ref Component2 c2, Uniform u) => c1.value += c2.value * u.value, uniform); // will run on thread pool
-            cross.JobFor((ref Component1 c1, ref Component2 c2, Uniform u) => c1.value += c2.value * u.value, uniform); // will run with jobs
-        }
+        public int value;
     }
-    ```
+        
+    private readonly World world = new();
+    private readonly Query<Component1, Component2> cross;
+
+    public Sample()
+    {
+        var c1 = new Component1 { value = 0 };
+        var c2 = new Component2 { value = 1 };
+        cross = world.Query<Component1, Component2>().Build();
+        for (var i = 0; i < 128; i++)
+            world.Spawn().Add(c1).Add(c2);
+    }
+
+    public void Update()
+    {
+        var uniform = new Uniform { value = 2 };
+        cross.For((ref Component1 c1, ref Component2 c2, Uniform u) => c1.value += c2.value * u.value, uniform); // will run on main thread
+        cross.Job((ref Component1 c1, ref Component2 c2, Uniform u) => c1.value += c2.value * u.value, uniform); // will run on thread pool
+        cross.JobFor((ref Component1 c1, ref Component2 c2, Uniform u) => c1.value += c2.value * u.value, uniform); // will run with jobs
+    }
+}
+```
 </details>
 
 <details>
-    <summary>Instanced rendering</summary>
+<summary>Instanced rendering</summary>
 
-    ```csharp
-    using fennecs;
-    using UnityEngine;
+```csharp
+using fennecs;
+using UnityEngine;
 
-    class Sample : MonoBehaviour
+class Sample : MonoBehaviour
+{
+    private struct Position { public Vector3 value; }
+    private struct Velocity { public Vector3 value; }
+
+    [SerializeField] private Mesh mesh;
+    [SerializeField] private Material material;
+    
+    private readonly World world = new();
+    private readonly Query<Position, Velocity, Quaternion> rotationQuery;
+    private readonly Query<Position, Quaternion, Matrix4x4> transformUpdateQuery;
+    private readonly Query<Matrix4x4> transformQuery;
+
+    public Sample()
     {
-        private struct Position { public Vector3 value; }
-        private struct Velocity { public Vector3 value; }
-
-        [SerializeField] private Mesh mesh;
-        [SerializeField] private Material material;
-        
-        private readonly World world = new();
-        private readonly Query<Position, Velocity, Quaternion> rotationQuery;
-        private readonly Query<Position, Quaternion, Matrix4x4> transformUpdateQuery;
-        private readonly Query<Matrix4x4> transformQuery;
-
-        public Sample()
-        {
-            rotationQuery = world.Query<Position, Velocity, Quaternion>().Build();
-            transformUpdateQuery = world.Query<Position, Quaternion, Matrix4x4>().Build();
-            transformQuery = world.Query<Matrix4x4>().Build();
-        }
-
-        public void Update()
-        {
-            rotationQuery.JobFor(UpdateRotation);
-            transformUpdateQuery.JobFor(UpdateTransform);
-            transformQuery.Cross(RenderBatch);
-        }
-
-        private static void UpdateRotation(ref Position position, ref Velocity velocity, ref Quaternion rotation)
-            => rotation = Quaternion.FromToRotation(position.value, position.value + velocity.value);
-        
-        private static void UpdateTransform(ref Position position, ref Quaternion rotation, ref Matrix4x4 transform)
-            => transform.SetTRS(position.value, rotation, Vector3.one);
-
-        private void RenderBatch(Matrix4x4[] transforms, int count)
-            => Graphics.DrawMeshInstanced(mesh, 0, material, transforms, count);
+        rotationQuery = world.Query<Position, Velocity, Quaternion>().Build();
+        transformUpdateQuery = world.Query<Position, Quaternion, Matrix4x4>().Build();
+        transformQuery = world.Query<Matrix4x4>().Build();
     }
-    ```
+
+    public void Update()
+    {
+        rotationQuery.JobFor(UpdateRotation);
+        transformUpdateQuery.JobFor(UpdateTransform);
+        transformQuery.Cross(RenderBatch);
+    }
+
+    private static void UpdateRotation(ref Position position, ref Velocity velocity, ref Quaternion rotation)
+        => rotation = Quaternion.FromToRotation(position.value, position.value + velocity.value);
+    
+    private static void UpdateTransform(ref Position position, ref Quaternion rotation, ref Matrix4x4 transform)
+        => transform.SetTRS(position.value, rotation, Vector3.one);
+
+    private void RenderBatch(Matrix4x4[] transforms, int count)
+        => Graphics.DrawMeshInstanced(mesh, 0, material, transforms, count);
+}
+```
 </details>
  
 ## Changes
