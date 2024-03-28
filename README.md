@@ -2,11 +2,11 @@
 
 This is a package which allow to use [fennecs](https://fennecs.tech/) with unity utilizing Job system as main running power.
 
-<details>
-    <summary>Disclamer</summary>
-
-    According to original licence it's MIT so evend if `Unity dumb` i managed to make it work but with some [changes](#changes).
-</details>
+><details>
+>    <summary>Disclamer</summary>
+>
+>    According to original licence it's MIT so evend if `Unity dumb` i managed to make it work but with some [changes](#changes).
+></details>
  
 ## Docs
 
@@ -18,11 +18,11 @@ Jobs workflow described in [section](#jobs-workflow) below.
 
 add to manifest.json
 ```json
-"com.blackbone.fennecs.unity" : "https://github.com/blackbone/fennecs.unity.git"
+"com.blackbone.fennecs-unity" : "https://github.com/blackbone/fennecs.unity.git"
 ```
 also release tags can be specified like this
 ```json
-"com.blackbone.fennecs.unity" : "https://github.com/blackbone/fennecs.unity.git#0.2.0-beta"
+"com.blackbone.fennecs-unity" : "https://github.com/blackbone/fennecs.unity.git#0.2.0-beta"
 ```
 
 ## Usage and code samples
@@ -204,7 +204,7 @@ class Sample : MonoBehaviour
 ```
 </details>
  
-## Changes
+## Changes <sub>*compared to original code*</sub>
 
 Because of nature of original project it's not possible to use it 'as is' with Unity so i managed to make it a bit different way.
 
