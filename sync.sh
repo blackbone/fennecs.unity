@@ -1,30 +1,35 @@
 #!/bin/bash
 
-# # get latest tag
-# SOURCE_TAG=$(curl -s https://api.github.com/repos/thygrrr/fennecs/tags | grep name | cut -d '"' -f 4 | head -n 1)
-# echo "origin at $SOURCE_TAG"
-# THIS_TAG=$(curl -s https://api.github.com/repos/blackbone/fennecs.unity/tags | grep name | cut -d '"' -f 4 | head -n 1)
-# echo "this at $THIS_TAG"
+echo "> comaring tags..."
+# get latest tag
+SOURCE_TAG=$(curl -s https://api.github.com/repos/thygrrr/fennecs/tags | grep name | cut -d '"' -f 4 | head -n 1)
+echo "origin at $SOURCE_TAG"
+THIS_TAG=$(curl -s https://api.github.com/repos/blackbone/fennecs.unity/tags | grep name | cut -d '"' -f 4 | head -n 1)
+echo "this at $THIS_TAG"
 
-# # if most recent tags equals - we're in sync
-# if [ "$SOURCE_TAG" = "$THIS_TAG" ]; then
-#     echo in sync, nothing to do
-#     exit 0
-# fi
+# if most recent tags equals - we're in sync
+if [ "$SOURCE_TAG" = "$THIS_TAG" ]; then
+    echo in sync, nothing to do
+    exit 0
+fi
 
-echo synchronizing...
+echo "> loading main repo code..."
 # load main repo code
 curl -LJO https://github.com/thygrrr/fennecs/archive/refs/heads/main.zip
 
+echo "> removing old code..."
 # remove previously cloned folder if exists
 rm -rf ./fennecs
 
+echo "> unpackingnew code..."
 # unsip main repo code
 unzip ./fennecs-main.zip -d ./fennecs
 
+echo "> removing archive..."
 # remove archive
 rm fennecs-main.zip
 
+echo "> making directories..."
 # copy all necessary files, this will overwrite structure
 mkdir -p ./src~
 mkdir -p ./src~/fennecs
@@ -32,6 +37,7 @@ mkdir -p ./src~/fennecs/pools
 cp -r ./fennecs/fennecs-main/fennecs/pools/*.cs ./src~/fennecs/pools
 cp -r ./fennecs/fennecs-main/fennecs/*.cs ./src~/fennecs
 
+echo "> sed-ing..."
 # replace `Array.Clear(srcStorage)` word in Query.cs with `Array.Clear(srcStorage, 0, srcStorage.Length)` - this is because netstandard2.1 not supports short overload
 sed -i -e 's/Array.Clear(srcStorage);/Array.Clear(srcStorage, 0, srcStorage.Length);/g' ./src~/fennecs/Archetype.cs
 
@@ -53,12 +59,15 @@ sed -i -e 's/protected void AssertNotDisposed()/protected internal void AssertNo
 sed -i -e 's/protected readonly List<Archetype> Archetypes;/protected internal readonly List<Archetype> Archetypes;/g' ./src~/fennecs/Query.cs
 sed -i -e 's/private protected readonly World World;/protected internal readonly World World;/g' ./src~/fennecs/Query.cs
 
+echo "> sed-ing done. removing intermediates..."
 # clear after sed - it keeps original files 
 rm ./src~/fennecs/*.cs-e
 
+echo "> removing cloned folder..."
 # remove cloned folder
 rm -rf ./fennecs
 
+echo "> building dotnet..."
 # build dll and copy to unity's runtime folder
 dotnet publish -c Release -o ./Runtime/Plugins/fennEcs ./src~/fennecs-unity.csproj
 rm ./Runtime/Plugins/fennEcs/fennecs-unity.deps.json
