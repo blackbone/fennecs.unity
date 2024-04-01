@@ -1,3 +1,18 @@
+#!/bin/bash
+
+# # get latest tag
+# SOURCE_TAG=$(curl -s https://api.github.com/repos/thygrrr/fennecs/tags | grep name | cut -d '"' -f 4 | head -n 1)
+# echo "origin at $SOURCE_TAG"
+# THIS_TAG=$(curl -s https://api.github.com/repos/blackbone/fennecs.unity/tags | grep name | cut -d '"' -f 4 | head -n 1)
+# echo "this at $THIS_TAG"
+
+# # if most recent tags equals - we're in sync
+# if [ "$SOURCE_TAG" = "$THIS_TAG" ]; then
+#     echo in sync, nothing to do
+#     exit 0
+# fi
+
+echo synchronizing...
 # load main repo code
 curl -LJO https://github.com/thygrrr/fennecs/archive/refs/heads/main.zip
 
