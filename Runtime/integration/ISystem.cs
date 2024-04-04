@@ -4,7 +4,20 @@ namespace fennecs.integration
     {
         void OnAttachToWorld(World world);
         void OnDetachFromWorld(World world);
-        
-        void Execute();
+    }
+
+    public interface IPreUpdateSystem : ISystem
+    {
+        void PreUpdateExecute();
+    }
+
+    public interface IUpdateSystem : ISystem
+    {
+        void UpdateExecute();
+    }
+
+    public interface IPostUpdateSystem : ISystem
+    {
+        void PostUpdateExecute();
     }
 }

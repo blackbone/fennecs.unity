@@ -11,9 +11,10 @@ namespace fennecs.integration
     public class WorldInstaller : MonoBehaviour
     {
         [SerializeField] private bool persistent;
-        [SerializeReference] private ISystem[] preUpdateSystems;
-        [SerializeReference] private ISystem[] updateSystems;
-        [SerializeReference] private ISystem[] postUpdateSystems;
+        [SerializeReference] private ISystem[] systems;
+        [SerializeReference] private IPreUpdateSystem[] preUpdateSystemsOrder;
+        [SerializeReference] private IUpdateSystem[] updateSystemsOrder;
+        [SerializeReference] private IPostUpdateSystem[] postUpdateSystemsOrder;
 
         private World world;
 
@@ -22,7 +23,7 @@ namespace fennecs.integration
         private void Awake()
         {
             world = new World();
-            foreach (var system in preUpdateSystems.Union(updateSystems).Union(postUpdateSystems))
+            foreach (var system in systems)
                 system.OnAttachToWorld(world);
 
             hideFlags |= HideFlags.NotEditable;
@@ -34,16 +35,16 @@ namespace fennecs.integration
             for (var i = 0; i < loop.subSystemList.Length; i++)
             {
                 if (loop.subSystemList[i].type == typeof(PreUpdate))
-                    foreach (var preUpdateSystem in preUpdateSystems)
-                        loop.subSystemList[i].updateDelegate += preUpdateSystem.Execute;
+                    foreach (var preUpdateSystem in preUpdateSystemsOrder)
+                        loop.subSystemList[i].updateDelegate += preUpdateSystem.PreUpdateExecute;
                 
                 if (loop.subSystemList[i].type == typeof(Update))
-                    foreach (var updateSystem in updateSystems)
-                        loop.subSystemList[i].updateDelegate += updateSystem.Execute;
+                    foreach (var updateSystem in updateSystemsOrder)
+                        loop.subSystemList[i].updateDelegate += updateSystem.UpdateExecute;
                 
                 if (loop.subSystemList[i].type == typeof(PreLateUpdate))
-                    foreach (var postUpdateSystem in postUpdateSystems)
-                        loop.subSystemList[i].updateDelegate += postUpdateSystem.Execute;
+                    foreach (var postUpdateSystem in postUpdateSystemsOrder)
+                        loop.subSystemList[i].updateDelegate += postUpdateSystem.PostUpdateExecute;
             }
             PlayerLoop.SetPlayerLoop(loop);
         }
@@ -54,23 +55,23 @@ namespace fennecs.integration
             for (var i = 0; i < loop.subSystemList.Length; i++)
             {
                 if (loop.subSystemList[i].type == typeof(PreUpdate))
-                    foreach (var preUpdateSystem in preUpdateSystems)
-                        loop.subSystemList[i].updateDelegate -= preUpdateSystem.Execute;
+                    foreach (var preUpdateSystem in preUpdateSystemsOrder)
+                        loop.subSystemList[i].updateDelegate -= preUpdateSystem.PreUpdateExecute;
                 
                 if (loop.subSystemList[i].type == typeof(Update))
-                    foreach (var updateSystem in updateSystems)
-                        loop.subSystemList[i].updateDelegate -= updateSystem.Execute;
+                    foreach (var updateSystem in updateSystemsOrder)
+                        loop.subSystemList[i].updateDelegate -= updateSystem.UpdateExecute;
                 
                 if (loop.subSystemList[i].type == typeof(PreLateUpdate))
-                    foreach (var postUpdateSystem in postUpdateSystems)
-                        loop.subSystemList[i].updateDelegate -= postUpdateSystem.Execute;
+                    foreach (var postUpdateSystem in postUpdateSystemsOrder)
+                        loop.subSystemList[i].updateDelegate -= postUpdateSystem.PostUpdateExecute;
             }
             PlayerLoop.SetPlayerLoop(loop);
         }
 
         private void OnDestroy()
         {
-            foreach (var system in preUpdateSystems.Union(updateSystems).Union(postUpdateSystems))
+            foreach (var system in systems)
                 system.OnDetachFromWorld(world);
             
             world.Dispose();
@@ -83,13 +84,12 @@ namespace fennecs.integration
         private void OnValidate()
         {
             name = "[World Installer]";
+            
+            preUpdateSystemsOrder = preUpdateSystemsOrder.Where(s => systems.Contains(s)).Union(systems.OfType<IPreUpdateSystem>()).ToArray();
+            updateSystemsOrder = updateSystemsOrder.Where(s => systems.Contains(s)).Union(systems.OfType<IUpdateSystem>()).ToArray();
+            postUpdateSystemsOrder = postUpdateSystemsOrder.Where(s => systems.Contains(s)).Union(systems.OfType<IPostUpdateSystem>()).ToArray();
         }
 #endif
-        public T GetSystem<T>() where T : ISystem
-        {
-            return preUpdateSystems.OfType<T>().FirstOrDefault()
-                   ?? updateSystems.OfType<T>().FirstOrDefault()
-                   ?? postUpdateSystems.OfType<T>().FirstOrDefault();
-        }
+        public T GetSystem<T>() where T : ISystem => systems.OfType<T>().FirstOrDefault();
     }
 }

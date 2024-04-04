@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 
 namespace Editor
 {
-    [CustomPropertyDrawer(typeof(ISystem))]
-    public class SystemsArrayPropertyDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(ISystem), false)]
+    public class SystemPropertyDrawer : PropertyDrawer
     {
         private static Dictionary<string, Type> systemTypes;
         
@@ -34,7 +34,8 @@ namespace Editor
             InitializeMenu(toolbarMenu, GetValue, OnTypeSelected);
             toolbar.Add(toolbarMenu);
 
-            var baseGui = new PropertyField(property);
+            var baseGui = new PropertyField(property, string.Empty);
+            baseGui.BindProperty(property);
             var container = new VisualElement();
             container.Add(baseGui);
             container.Add(toolbar);
