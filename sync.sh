@@ -37,6 +37,8 @@ mkdir -p ./src~/fennecs/pools
 cp -r ./fennecs/fennecs-$SOURCE_TAG/fennecs/pools/*.cs ./src~/fennecs/pools
 cp -r ./fennecs/fennecs-$SOURCE_TAG/fennecs/*.cs ./src~/fennecs
 
+rm ./src~/fennecs/Aliasing.cs # temporary while not used
+
 echo "> sed-ing..."
 # replace `ArgumentNullException.ThrowIfNull(nameof(item));` to `if (item == null) throw new ArgumentNullException(nameof(item));`
 sed -i -e 's/ArgumentNullException.ThrowIfNull(nameof(item));/if (item == null) throw new ArgumentNullException(nameof(item));/g' ./src~/fennecs/pools/ReferenceStore.cs
@@ -54,6 +56,8 @@ sed -i -e 's/System.Random.Shared.Next(Count)/utility.RandomImpl.Next(Count)/g' 
 # replace `override` word in QueryBuilder[n].cs with `new` - this is because netstandard2.1 not supports co-variant overloads
 sed -i -e 's/override/new/g' ./src~/fennecs/QueryBuilder.cs
 sed -i -e 's/public abstract Query Build();/public virtual Query Build() => throw new InvalidOperationException();/g' ./src~/fennecs/QueryBuilder.cs
+sed -i -e 's/public abstract Query Compile();/public virtual Query Compile() => throw new InvalidOperationException();/g' ./src~/fennecs/QueryBuilder.cs
+sed -i -e 's/public abstract Query Unique();/public virtual Query Unique() => throw new InvalidOperationException();/g' ./src~/fennecs/QueryBuilder.cs
 
 # # replace `ThreadPool.UnsafeQueueUserWorkItem(job, true);` word in Query[n].cs with `ThreadPool.UnsafeQueueUserWorkItem(_ => job.Execute(), true);` - this is because netstandard2.1 not supports newest thread pool and i haven't managed how to make it work in unity
 sed -i -e 's/ThreadPool.UnsafeQueueUserWorkItem(job, true);/ThreadPool.UnsafeQueueUserWorkItem(_ => job.Execute(), true);/g' ./src~/fennecs/Query1.cs
